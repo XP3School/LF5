@@ -2,43 +2,46 @@ package de.X_P_3.executing;
 
 import de.X_P_3.console.out.Output;
 import de.X_P_3.console.out.OutputPrintStreamTypes;
-import de.X_P_3.executing.mains.*;
 
 public class MultiMain {
-
-    public static iMainExecutable[] mains = {
-            new AverageSumMethod(),
-            //new RomeshNumber(),
-            new OneHundred()
-    };
-
-    public static final int directExecute = 1;
+    public static final int directExecute = -1;
     public static final String[] directExecuteParameter = {};
+    public static MainClassExecuting classExecuting = new MainClassExecuting();
 
     public static void main(String[] args) {
         Output output = new Output(OutputPrintStreamTypes.newLine, System.out);
         Output error = new Output(OutputPrintStreamTypes.newLine, System.err);
         output.print("\tloading classes...");
-        // auto search for valid classes in project and from a folder on a drive
+
+        int classCount = classExecuting.loadClasses();
+
+        if (classCount == 0) {
+            output.print("\tno class was found\n\texit");
+            System.exit(0);
+        } else if (classCount == 1)
+            output.print("\tloaded 1 class:");
+        else
+            output.print("\tloaded " + classCount + " classes:");
+
+        for (iMainExecutable executable : classExecuting.mains) {
+            System.out.println("\t" + executable.getClass().getName());
+        }
+
         boolean repeat = true;
         while (repeat) {
-            if (mains.length == 0) {
-                output.print("\tno class was found\n\tcancel");
-                break;
-            } else if (mains.length == 1)
-                output.print("\tloaded " + mains.length + " class:");
-            else
-                output.print("\tloaded " + mains.length + " classes:");
             int c = 0;
-            for (iMainExecutable item : mains) {
+            for (iMainExecutable item : classExecuting.mains) {
                 output.print("\t[" + c + "] | " + item.getClass().getName());
                 c++;
             }
+
             int classNumber;
             String[] executeParameter;
             if (directExecute == -1) {
-                output.print("\n\tenter a the id of a class to execute, enter parameter separated with a space");
+
+                output.print("\n\tenter a the id of a class to execute, enter parameter separated with a space\n\t\t(3 parm1 parm2 parm3)");
                 String input = iMainExecutable.SCANNER.next();
+
                 if (input.matches("\\d+( .+)*")) {
                     StringBuilder classNumberS = new StringBuilder();
                     for (char item : input.toCharArray()) {
@@ -52,14 +55,14 @@ public class MultiMain {
                     else
                         executeParameter = new String[0];
                     classNumber = Integer.parseInt(classNumberS.toString());
-                    if (classNumber > mains.length - 1) {
-                        error.print("Invalid class id");
+                    if (classNumber > classCount - 1) {
+                        error.print("invalid class id");
                         classNumber = -1;
                         executeParameter = null;
                         System.exit(-1);
                     }
                 } else {
-                    error.print("Failed to execute \"" + input + "\"");
+                    error.print("Failed to compile \"" + input + "\"");
                     classNumber = -1;
                     executeParameter = null;
                     System.exit(-1);
@@ -68,12 +71,47 @@ public class MultiMain {
                 classNumber = directExecute;
                 executeParameter = directExecuteParameter;
             }
-            output.print("\texecute class: " + mains[classNumber].getClass().getName() + "\n\n\n");
-            mains[classNumber].execute(executeParameter);
-            output.print("\n\n\n\tfinished executing class: " + mains[classNumber].getClass().getName() + "\n\tstopping program");
-            if (directExecute != -1) {
-                System.out.println("\tend");
-                System.exit(0);
+
+            boolean repeatExecute = true;
+            while (repeatExecute) {
+
+                iMainExecutable executeClass = classExecuting.getClassByPos(classNumber);
+                output.print("\texecute class: " + executeClass.getClass().getName() + "\n");
+
+                ExecuteReturn aReturn = MainClassExecuting.executeClass(executeClass, executeParameter);
+
+                output.print("\n\tfinished executing class: " + executeClass.getClass().getName() + "\n\tstopping program");
+
+                if (directExecute != -1) {
+                    System.out.println("\tend");
+                    System.exit(0);
+                }
+
+                boolean repeatInput = true;
+                while (repeatInput) {
+                    output.print("""
+
+                            \tenter the next action
+                            \t\t'r' -> repeat programm
+                            \t\t'n' -> select next programm
+                            \t\t'e' -> exit""");
+                    String input2 = iMainExecutable.SCANNER.next();
+                    if (input2.length() == 1)
+                        switch (input2) {
+                            case "r" -> repeatInput = false;
+                            case "n" -> {
+                                repeatInput = false;
+                                repeatExecute = false;
+                            }
+                            case "e" -> {
+                                System.out.println("\texit");
+                                repeat = false;
+                                repeatExecute = false;
+                                repeatInput = false;
+                            }
+                            default -> System.out.println("\tinvalid option");
+                        }
+                }
             }
         }
     }

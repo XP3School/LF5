@@ -1,6 +1,6 @@
 package de.X_P_3.executing.mains;
 
-import de.X_P_3.console.in.*;
+import de.X_P_3.console.in.ValidObjectTypes;
 import de.X_P_3.executing.iMainExecutable;
 import de.X_P_3.variable.Variable;
 
@@ -22,7 +22,7 @@ public class AverageSumMethod implements iMainExecutable {
             if (Variable.isFormattedLike(input, ValidObjectTypes.Double))
                 current+= Double.parseDouble(input);
             else
-                System.err.println("input is not a double");
+                System.err.println("the input is not a double");
             System.out.println("Average: " + current / count);
         }
         return 0;

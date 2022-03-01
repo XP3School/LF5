@@ -29,11 +29,7 @@ public class ComputeRomeshNumber {
         for (char currentChar: Number.toCharArray()){
             if (lastChar == currentChar)
                 count++;
-            else{
-
-            }
             int currentNumber = convertToInt(currentChar);
-
             if (currentNumber > biggestUntilNow){
                 currentEnd = currentNumber - currentEnd;
                 biggestUntilNow = currentNumber;

@@ -5,8 +5,15 @@ import de.X_P_3.console.out.OutputPrintStreamTypes;
 
 public class MultiMain {
     public static final int directExecute = -1;
+    public static final int borderLength = 20;
     public static final String[] directExecuteParameter = {};
+    public static final boolean showFullClassName = false;
+
     public static MainClassExecuting classExecuting = new MainClassExecuting();
+
+    public static String getBorder() {
+        return "=".repeat(borderLength);
+    }
 
     public static void main(String[] args) {
         Output output = new Output(OutputPrintStreamTypes.newLine, System.out);
@@ -24,14 +31,17 @@ public class MultiMain {
             output.print("\tloaded " + classCount + " classes:");
 
         for (iMainExecutable executable : classExecuting.mains) {
-            System.out.println("\t" + executable.getClass().getName());
+            System.out.println("\t\t" + executable.getClass().getName());
         }
+        System.out.print("\n\n\n");
 
         boolean repeat = true;
+        boolean repeatExecute = true;
         while (repeat) {
+            repeatExecute = true;
             int c = 0;
             for (iMainExecutable item : classExecuting.mains) {
-                output.print("\t[" + c + "] | " + item.getClass().getName());
+                output.print("\t[" + c + "] | " + getClassName(item.getClass()));
                 c++;
             }
 
@@ -40,7 +50,7 @@ public class MultiMain {
             if (directExecute == -1) {
 
                 output.print("\n\tenter a the id of a class to execute, enter parameter separated with a space\n\t\t(3 parm1 parm2 parm3)");
-                String input = iMainExecutable.SCANNER.next();
+                String input = iMainExecutable.SCANNER.nextLine();
 
                 if (input.matches("\\d+( .+)*")) {
                     StringBuilder classNumberS = new StringBuilder();
@@ -59,28 +69,37 @@ public class MultiMain {
                         error.print("invalid class id");
                         classNumber = -1;
                         executeParameter = null;
-                        System.exit(-1);
+                        //System.exit(-1);
+                        repeatExecute = false;
                     }
                 } else {
                     error.print("Failed to compile \"" + input + "\"");
                     classNumber = -1;
                     executeParameter = null;
-                    System.exit(-1);
+                    //System.exit(-1);
+                    repeatExecute = false;
                 }
             } else {
                 classNumber = directExecute;
                 executeParameter = directExecuteParameter;
             }
 
-            boolean repeatExecute = true;
+
             while (repeatExecute) {
 
                 iMainExecutable executeClass = classExecuting.getClassByPos(classNumber);
-                output.print("\texecute class: " + executeClass.getClass().getName() + "\n");
+                output.print("\tstarting program\n\texecute class: " + getClassName(executeClass.getClass()) + "\n");
 
+                System.out.println(getBorder());
                 ExecuteReturn aReturn = MainClassExecuting.executeClass(executeClass, executeParameter);
+                System.out.println("\n" + getBorder());
 
-                output.print("\n\tfinished executing class: " + executeClass.getClass().getName() + "\n\tstopping program");
+                output.print("\n\tfinished executing class with code: " + aReturn.exitCode + "\n\texited with message: \"" + aReturn.exitMessage + "\"\n\tstopping program");
+                if (aReturn.exception != null) {
+                    output.print("\n\texception: " + aReturn.exception.toString());
+                    if (aReturn.exception.getCause() != null)
+                        output.print("\n\t\t" + aReturn.exception.getCause().toString());
+                }
 
                 if (directExecute != -1) {
                     System.out.println("\tend");
@@ -114,5 +133,12 @@ public class MultiMain {
                 }
             }
         }
+    }
+
+    public static String getClassName(Class<?> _class) {
+        if (showFullClassName)
+            return _class.getName();
+        else
+            return _class.getSimpleName();
     }
 }
